@@ -36,6 +36,8 @@
 
 /**********************************************************************/
 
+extern double packet_arrival_rate;
+
 typedef double Time;
 typedef Fifoqueue_Ptr Buffer_Ptr;
 
@@ -88,7 +90,6 @@ main(void);
 /**********************************************************************/
 
 #endif /* main.h */
-
 
 
 

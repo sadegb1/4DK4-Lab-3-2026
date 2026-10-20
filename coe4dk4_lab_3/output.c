@@ -68,30 +68,45 @@ void output_results(Simulation_Run_Ptr this_simulation_run)
 
   sim_data = (Simulation_Run_Data_Ptr) simulation_run_data(this_simulation_run);
 
-  printf("\n");
-  printf("Random Seed = %d \n", sim_data->random_seed);
-  printf("Pkt Arrivals = %ld \n", sim_data->arrival_count);
+  // printf("\n");
+  // printf("Random Seed = %d \n", sim_data->random_seed);
+  // printf("Pkt Arrivals = %ld \n", sim_data->arrival_count);
 
   xmtted_fraction = (double) sim_data->number_of_packets_processed /
     sim_data->arrival_count;
 
-  printf("Xmtted Pkts  = %ld (Service Fraction = %.5f)\n",
-	 sim_data->number_of_packets_processed, xmtted_fraction);
+  // printf("Xmtted Pkts  = %ld (Service Fraction = %.5f)\n",
+	//  sim_data->number_of_packets_processed, xmtted_fraction);
 
-  printf("Mean Delay   = %.1f \n",
-	 sim_data->accumulated_delay/sim_data->number_of_packets_processed);
+  // printf("Mean Delay   = %.1f \n",
+	//  sim_data->accumulated_delay/sim_data->number_of_packets_processed);
 
-  printf("Mean collisions per packet = %.3f\n",
-	 (double) sim_data->number_of_collisions / 
-	 sim_data->number_of_packets_processed);
+  // printf("Mean collisions per packet = %.3f\n",
+	//  (double) sim_data->number_of_collisions / 
+	//  sim_data->number_of_packets_processed);
+
+  
 
   for(i=0; i<NUMBER_OF_STATIONS; i++) {
 
-    printf("Station %2i Mean Delay = %8.1f \n", i,
-	   (sim_data->stations+i)->accumulated_delay / 
-	   (sim_data->stations+i)->packet_count);
+    // printf("Station %2i Mean Delay = %8.1f \n", i,
+	  //  (sim_data->stations+i)->accumulated_delay / 
+	  //  (sim_data->stations+i)->packet_count);
+
+    printf("%d, %f, %ld, %ld, %.5f, %2i, %8.1f, %.1f, %.3f\n",
+      sim_data->random_seed,
+      packet_arrival_rate,
+      sim_data->arrival_count,
+      sim_data->number_of_packets_processed,
+      xmtted_fraction,
+
+      i,
+      (sim_data->stations+i)->accumulated_delay / (sim_data->stations+i)->packet_count,
+
+      sim_data->accumulated_delay/sim_data->number_of_packets_processed,
+      (double) sim_data->number_of_collisions / sim_data->number_of_packets_processed);
   }
-  printf("\n\n");
+
 }
 
 
