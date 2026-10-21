@@ -96,6 +96,8 @@ void output_results(Simulation_Run_Ptr this_simulation_run)
     printf("%d, %f, %ld, %ld, %.5f, %2i, %8.1f, %.1f, %.3f\n",
       sim_data->random_seed,
       packet_arrival_rate,
+      MEAN_BACKOFF_DURATION,
+      NUMBER_OF_STATIONS,
       sim_data->arrival_count,
       sim_data->number_of_packets_processed,
       xmtted_fraction,
