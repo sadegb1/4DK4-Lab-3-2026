@@ -93,7 +93,7 @@ void output_results(Simulation_Run_Ptr this_simulation_run)
 	  //  (sim_data->stations+i)->accumulated_delay / 
 	  //  (sim_data->stations+i)->packet_count);
 
-    printf("%u, %f, %d, %d, %ld, %ld, %.5f, %2i, %8.1f, %.1f, %.3f\n",
+    printf("%u, %f, %d, %d, %ld, %ld, %.5f, %.1f %2i, %8.1f, %.3f\n",
       sim_data->random_seed,
       packet_arrival_rate,
       MEAN_BACKOFF_DURATION,
@@ -102,10 +102,10 @@ void output_results(Simulation_Run_Ptr this_simulation_run)
       sim_data->number_of_packets_processed,
       xmtted_fraction,
 
+      sim_data->accumulated_delay/sim_data->number_of_packets_processed, // mean delay for all stations
       i,
       (sim_data->stations+i)->accumulated_delay / (sim_data->stations+i)->packet_count, // mean delay for one station
 
-      sim_data->accumulated_delay/sim_data->number_of_packets_processed, // mean delay for all stations
       (double) sim_data->number_of_collisions / sim_data->number_of_packets_processed);
   }
 
