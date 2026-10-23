@@ -93,7 +93,7 @@ void output_results(Simulation_Run_Ptr this_simulation_run)
 	  //  (sim_data->stations+i)->accumulated_delay / 
 	  //  (sim_data->stations+i)->packet_count);
 
-    printf("%u, %f, %d, %d, %ld, %ld, %.5f, %.1f %2i, %8.1f, %.3f\n",
+    printf("%u, %f, %d, %d, %ld, %ld, %.5f, %.1f, %2i, %8.1f, %.3f\n",
       sim_data->random_seed,
       packet_arrival_rate,
       MEAN_BACKOFF_DURATION,
