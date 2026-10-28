@@ -67,6 +67,9 @@ void output_results(Simulation_Run_Ptr this_simulation_run)
   Simulation_Run_Data_Ptr sim_data;
 
   sim_data = (Simulation_Run_Data_Ptr) simulation_run_data(this_simulation_run);
+  
+  double throughput = (double) sim_data->number_of_packets_processed / simulation_run_get_time(this_simulation_run);
+  double aggregate_traffic_load = sim_data->arrival_count / simulation_run_get_time(this_simulation_run);
 
   // printf("\n");
   // printf("Random Seed = %d \n", sim_data->random_seed);
@@ -86,14 +89,7 @@ void output_results(Simulation_Run_Ptr this_simulation_run)
 	//  sim_data->number_of_packets_processed);
 
   
-
-  for(i=0; i<NUMBER_OF_STATIONS; i++) {
-
-    // printf("Station %2i Mean Delay = %8.1f \n", i,
-	  //  (sim_data->stations+i)->accumulated_delay / 
-	  //  (sim_data->stations+i)->packet_count);
-
-    printf("%u, %f, %d, %d, %ld, %ld, %.5f, %.1f, %2i, %8.1f, %.3f\n",
+    printf("%u, %f, %d, %d, %ld, %ld, %.5f, %.1f, %f, %f, %f, %.3f\n",
       sim_data->random_seed,
       packet_arrival_rate,
       MEAN_BACKOFF_DURATION,
@@ -101,13 +97,35 @@ void output_results(Simulation_Run_Ptr this_simulation_run)
       sim_data->arrival_count,
       sim_data->number_of_packets_processed,
       xmtted_fraction,
-
       sim_data->accumulated_delay/sim_data->number_of_packets_processed, // mean delay for all stations
-      i,
-      (sim_data->stations+i)->accumulated_delay / (sim_data->stations+i)->packet_count, // mean delay for one station
+      simulation_run_get_time(this_simulation_run), // simulation run time
+      aggregate_traffic_load, // aggregate traffic load
+      throughput,
+      (double) sim_data->number_of_collisions / sim_data->number_of_packets_processed); // mean collisions per packet
 
-      (double) sim_data->number_of_collisions / sim_data->number_of_packets_processed);
-  }
+
+
+  // for(i=0; i<NUMBER_OF_STATIONS; i++) {
+
+    // printf("Station %2i Mean Delay = %8.1f \n", i,
+	  //  (sim_data->stations+i)->accumulated_delay / 
+	  //  (sim_data->stations+i)->packet_count);
+
+  //   printf("%u, %f, %d, %d, %ld, %ld, %.5f, %.1f, %2i, %8.1f, %.3f\n",
+  //     sim_data->random_seed,
+  //     packet_arrival_rate,
+  //     MEAN_BACKOFF_DURATION,
+  //     NUMBER_OF_STATIONS,
+  //     sim_data->arrival_count,
+  //     sim_data->number_of_packets_processed,
+  //     xmtted_fraction,
+
+  //     sim_data->accumulated_delay/sim_data->number_of_packets_processed, // mean delay for all stations
+  //     i,
+  //     (sim_data->stations+i)->accumulated_delay / (sim_data->stations+i)->packet_count, // mean delay for one station
+
+  //     (double) sim_data->number_of_collisions / sim_data->number_of_packets_processed);
+  // }
 
 }
 

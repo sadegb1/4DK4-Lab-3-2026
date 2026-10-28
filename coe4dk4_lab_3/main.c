@@ -50,7 +50,8 @@ main(void)
   int i;
   size_t lambda_index;
 
-  printf("Random seed, Packet arrival rate, Mean backoff duration, Number of stations, Packet arrivals, Packets transmitted, Service fraction, Mean delay (all stations), Station, Mean delay (station), Mean collisions per packet\n");
+  // printf("Random seed, Packet arrival rate, Mean backoff duration, Number of stations, Packet arrivals, Packets transmitted, Service fraction, Mean delay (all stations), Station, Mean delay (station), Mean collisions per packet\n");
+  printf("Random seed, Packet arrival rate, Mean backoff duration, Number of stations, Packet arrivals, Packets transmitted, Service fraction, Mean delay (all stations), Simulation run time, Aggregate traffic load,Throughput, Mean collisions per packet\n");
 
   for(lambda_index=0;
       lambda_index < sizeof(PACKET_ARRIVAL_RATES)/sizeof(PACKET_ARRIVAL_RATES[0]);
@@ -104,6 +105,8 @@ main(void)
       while(data.number_of_packets_processed < RUNLENGTH) {
         simulation_run_execute_event(simulation_run);
       }
+
+      // printf("Time: %f\n", simulation_run_get_time(simulation_run));
 
       /* Print out some results. */
       output_results(simulation_run);
