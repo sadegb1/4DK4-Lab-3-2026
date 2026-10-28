@@ -48,13 +48,13 @@ output_blip_to_screen(Simulation_Run_Ptr simulation_run)
     percentagedone =
       100 * (double) data->number_of_packets_processed/RUNLENGTH;
 
-    printf("%3.0f%% ", percentagedone);
+    fprintf(stderr, "%3.0f%% ", percentagedone);
 
-    printf("Successfully Xmtted Pkts  = %ld (Arrived Pkts = %ld) \r", 
+    fprintf(stderr, "Successfully Xmtted Pkts  = %ld (Arrived Pkts = %ld) \r", 
 	   data->number_of_packets_processed, 
 	   data->arrival_count);
 
-    fflush(stdout);
+    fflush(stderr);
   }
 }
 
@@ -64,9 +64,16 @@ void output_results(Simulation_Run_Ptr this_simulation_run)
 {
   int i;
   double xmtted_fraction;
+  double throughput;
+  const char *backoff_mode;
   Simulation_Run_Data_Ptr sim_data;
 
   sim_data = (Simulation_Run_Data_Ptr) simulation_run_data(this_simulation_run);
+#if BINARY_EXPONENTIAL_BACKOFF
+  backoff_mode = "binary_exponential";
+#else
+  backoff_mode = "fixed_mean";
+#endif
 
   // printf("\n");
   // printf("Random Seed = %d \n", sim_data->random_seed);
@@ -74,6 +81,8 @@ void output_results(Simulation_Run_Ptr this_simulation_run)
 
   xmtted_fraction = (double) sim_data->number_of_packets_processed /
     sim_data->arrival_count;
+  throughput = (double) sim_data->number_of_packets_processed /
+    simulation_run_get_time(this_simulation_run);
 
   // printf("Xmtted Pkts  = %ld (Service Fraction = %.5f)\n",
 	//  sim_data->number_of_packets_processed, xmtted_fraction);
@@ -93,14 +102,16 @@ void output_results(Simulation_Run_Ptr this_simulation_run)
 	  //  (sim_data->stations+i)->accumulated_delay / 
 	  //  (sim_data->stations+i)->packet_count);
 
-    printf("%u, %f, %d, %d, %ld, %ld, %.5f, %.1f, %2i, %8.1f, %.3f\n",
+    printf("%u, %f, %s, %d, %d, %ld, %ld, %.5f, %.7f, %.1f, %2i, %8.1f, %.3f\n",
       sim_data->random_seed,
       packet_arrival_rate,
+      backoff_mode,
       MEAN_BACKOFF_DURATION,
       NUMBER_OF_STATIONS,
       sim_data->arrival_count,
       sim_data->number_of_packets_processed,
       xmtted_fraction,
+      throughput,
 
       sim_data->accumulated_delay/sim_data->number_of_packets_processed, // mean delay for all stations
       i,
