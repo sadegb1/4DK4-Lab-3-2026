@@ -27,9 +27,9 @@
 
 /*******************************************************************************/
 
-#define NUMBER_OF_STATIONS 10
+#define NUMBER_OF_STATIONS 5
 #define MEAN_PACKET_DURATION 1      /* normalized packet Tx time */
-#define PACKET_ARRIVAL_RATE_LIST 0.03,0.04,0.05,0.06,0.07,0.08,0.09    /* packets per Tx time */
+#define PACKET_ARRIVAL_RATE_LIST  0.1, 0.12, 0.14    /* packets per Tx time */
 #define MEAN_BACKOFF_DURATION 5    /* in units of packet transmit time, Tx */
 #define RUNLENGTH 70000000
 #define BLIPRATE 100000

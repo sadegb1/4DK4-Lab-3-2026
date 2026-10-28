@@ -50,7 +50,7 @@ main(void)
   int i;
   size_t lambda_index;
 
-  printf("Random seed, Packet arrival rate, Mean backoff duration, Number of stations, Packet arrivals, Packets transmitted, Service fraction, Mean delay (all stations), Station, Mean delay (station), Mean collisions per packet\n");
+  printf("Random seed, Packet arrival rate, Number of stations, Mean backoff duration, Packet arrivals, Packets transmitted, Service fraction, Mean delay (all stations), Station, Mean delay (station), Mean collisions per packet\n");
 
   for(lambda_index=0;
       lambda_index < sizeof(PACKET_ARRIVAL_RATES)/sizeof(PACKET_ARRIVAL_RATES[0]);
