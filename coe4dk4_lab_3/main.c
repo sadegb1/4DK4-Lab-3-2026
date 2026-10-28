@@ -46,8 +46,12 @@ main(void)
   Simulation_Run_Data data;
   int i, j=0;
 
+<<<<<<< HEAD
   /* Do a new simulation_run for each random number generator seed. */
   while ((random_seed = RANDOM_SEEDS[j++]) != 0) {
+=======
+  printf("Random seed, Packet arrival rate, Backoff mode, Mean backoff duration, Number of stations, Packet arrivals, Packets transmitted, Service fraction, Throughput, Mean delay (all stations), Station, Mean delay (station), Mean collisions per packet\n");
+>>>>>>> 6230ee7 (binary exp backoff)
 
     /* Set the random generator seed. */
     random_generator_initialize(random_seed);
