@@ -63,8 +63,10 @@ output_blip_to_screen(Simulation_Run_Ptr simulation_run)
 void output_results(Simulation_Run_Ptr this_simulation_run)
 {
   int i;
-  double xmtted_fraction;
+  double service_fraction;
   double throughput;
+  double mean_delay;
+  double station_mean_delay;
   const char *backoff_mode;
   Simulation_Run_Data_Ptr sim_data;
 
@@ -75,55 +77,37 @@ void output_results(Simulation_Run_Ptr this_simulation_run)
   backoff_mode = "fixed_mean";
 #endif
 
-  printf("\n");
-  printf("Random Seed = %d \n", sim_data->random_seed);
-  printf("Pkt Arrivals = %ld \n", sim_data->arrival_count);
-
-  xmtted_fraction = (double) sim_data->number_of_packets_processed /
+  service_fraction = (double) sim_data->number_of_packets_processed /
     sim_data->arrival_count;
   throughput = (double) sim_data->number_of_packets_processed /
     simulation_run_get_time(this_simulation_run);
-
-  printf("Xmtted Pkts  = %ld (Service Fraction = %.5f)\n",
-	 sim_data->number_of_packets_processed, xmtted_fraction);
-
-  printf("Mean Delay   = %.1f \n",
-	 sim_data->accumulated_delay/sim_data->number_of_packets_processed);
-
-  printf("Mean collisions per packet = %.3f\n",
-	 (double) sim_data->number_of_collisions / 
-	 sim_data->number_of_packets_processed);
+  mean_delay = sim_data->accumulated_delay /
+    sim_data->number_of_packets_processed;
 
   for(i=0; i<NUMBER_OF_STATIONS; i++) {
+    if((sim_data->stations+i)->packet_count > 0) {
+      station_mean_delay = (sim_data->stations+i)->accumulated_delay /
+        (sim_data->stations+i)->packet_count;
+    } else {
+      station_mean_delay = 0.0;
+    }
 
-<<<<<<< HEAD
-    printf("Station %2i Mean Delay = %8.1f \n", i,
-	   (sim_data->stations+i)->accumulated_delay / 
-	   (sim_data->stations+i)->packet_count);
-=======
-    // printf("Station %2i Mean Delay = %8.1f \n", i,
-	  //  (sim_data->stations+i)->accumulated_delay / 
-	  //  (sim_data->stations+i)->packet_count);
-
-    printf("%u, %f, %s, %d, %d, %ld, %ld, %.5f, %.7f, %.1f, %2i, %8.1f, %.3f\n",
+    printf("%u,%.6f,%s,%d,%d,%ld,%ld,%.5f,%.7f,%.3f,%d,%.3f,%.3f\n",
       sim_data->random_seed,
-      packet_arrival_rate,
+      PACKET_ARRIVAL_RATE,
       backoff_mode,
       MEAN_BACKOFF_DURATION,
       NUMBER_OF_STATIONS,
       sim_data->arrival_count,
       sim_data->number_of_packets_processed,
-      xmtted_fraction,
+      service_fraction,
       throughput,
-
-      sim_data->accumulated_delay/sim_data->number_of_packets_processed, // mean delay for all stations
+      mean_delay,
       i,
-      (sim_data->stations+i)->accumulated_delay / (sim_data->stations+i)->packet_count, // mean delay for one station
-
-      (double) sim_data->number_of_collisions / sim_data->number_of_packets_processed);
->>>>>>> 6230ee7 (binary exp backoff)
+      station_mean_delay,
+      (double) sim_data->number_of_collisions /
+        sim_data->number_of_packets_processed);
   }
-  printf("\n\n");
 }
 
 
