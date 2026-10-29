@@ -40,18 +40,23 @@ main(void)
 {
   /* Get the list of random number generator seeds defined in simparameters.h */
   unsigned random_seed;
+  double arrival_rate;
   unsigned RANDOM_SEEDS[] = {RANDOM_SEED_LIST, 0};
+  double ARRIVAL_RATES[] = {PACKET_ARRIVAL_RATE, 0};
 
   Simulation_Run_Ptr simulation_run;
   Simulation_Run_Data data;
-  int i, j=0;
+  int i, k, j=0;
 
-  printf("Random seed, Packet arrival rate, Backoff mode, Mean backoff duration, Number of stations, Packet arrivals, Packets transmitted, Service fraction, Throughput, Mean delay (all stations), Station, Mean delay (station), Mean collisions per packet\n");
+  printf("Random seed, Packet arrival rate, Backoff mode, Mean backoff duration, Number of stations, Packet arrivals, Packets transmitted, Service fraction, Throughput (statsion), Mean delay (all stations), Station, Mean delay (station), Mean collisions per packet\n");
 
   /* Do a new simulation_run for each random number generator seed. */
   while ((random_seed = RANDOM_SEEDS[j++]) != 0) {
     /* Set the random generator seed. */
     random_generator_initialize(random_seed);
+    k=0;
+
+    while((arrival_rate = ARRIVAL_RATES[k++]) != 0) {
 
     /* Create a new simulation_run. This gives a clock and
        eventlist. Clock time is set to zero. */
@@ -71,6 +76,7 @@ main(void)
     data.number_of_collisions = 0;
     data.accumulated_delay = 0.0;
     data.random_seed = random_seed;
+    data.arrival_rate = arrival_rate;
     
     /* Initialize the stations. */
     for(i=0; i<NUMBER_OF_STATIONS; i++) {
@@ -87,7 +93,7 @@ main(void)
     /* Schedule initial packet arrival. */
     schedule_packet_arrival_event(simulation_run, 
 		    simulation_run_get_time(simulation_run) +
-		    exponential_generator((double) 1/PACKET_ARRIVAL_RATE));
+		    exponential_generator((double) 1.0 / data.arrival_rate));
 
     /* Execute events until we are finished. */
     while(data.number_of_packets_processed < RUNLENGTH) {
@@ -100,6 +106,7 @@ main(void)
     /* Clean up memory. */
     cleanup(simulation_run);
   }
+}
 
   return 0;
 }

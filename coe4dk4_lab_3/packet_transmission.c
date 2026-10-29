@@ -133,7 +133,7 @@ transmission_end_event(Simulation_Run_Ptr simulation_run, void * packet)
     data->number_of_collisions += this_packet->collision_count;
     data->accumulated_delay += now - this_packet->arrive_time;
 
-    output_blip_to_screen(simulation_run);
+    // output_blip_to_screen(simulation_run);
 
     /* This packet is done. */
     free((void*) fifoqueue_get(buffer));
@@ -165,7 +165,7 @@ transmission_end_event(Simulation_Run_Ptr simulation_run, void * packet)
     }
 
     if(this_packet->station_id == 0) {
-      backoff_duration = this_packet->service_time;
+      backoff_duration = 0.0;
     } else {
 #if BINARY_EXPONENTIAL_BACKOFF
       backoff_duration = uniform_generator() *

@@ -79,12 +79,18 @@ void output_results(Simulation_Run_Ptr this_simulation_run)
 
   service_fraction = (double) sim_data->number_of_packets_processed /
     sim_data->arrival_count;
-  throughput = (double) sim_data->number_of_packets_processed /
-    simulation_run_get_time(this_simulation_run);
+  // throughput = (double) sim_data->number_of_packets_processed / simulation_run_get_time(this_simulation_run); 
+  //only calculates avg throughput for all stations
+  //we need individual throughput per station for this part
   mean_delay = sim_data->accumulated_delay /
     sim_data->number_of_packets_processed;
 
   for(i=0; i<NUMBER_OF_STATIONS; i++) {
+    //indv station throughput calc
+    throughput = (double)((sim_data->stations+i)->packet_count) 
+    / simulation_run_get_time(this_simulation_run);
+
+    //indv station mean delay calc 
     if((sim_data->stations+i)->packet_count > 0) {
       station_mean_delay = (sim_data->stations+i)->accumulated_delay /
         (sim_data->stations+i)->packet_count;
@@ -94,7 +100,7 @@ void output_results(Simulation_Run_Ptr this_simulation_run)
 
     printf("%u,%.6f,%s,%d,%d,%ld,%ld,%.5f,%.7f,%.3f,%d,%.3f,%.3f\n",
       sim_data->random_seed,
-      PACKET_ARRIVAL_RATE,
+      sim_data->arrival_rate,
       backoff_mode,
       MEAN_BACKOFF_DURATION,
       NUMBER_OF_STATIONS,
