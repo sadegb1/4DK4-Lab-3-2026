@@ -94,7 +94,7 @@ void output_results(Simulation_Run_Ptr this_simulation_run)
 
     printf("%u,%.6f,%s,%d,%d,%ld,%ld,%.5f,%.7f,%.3f,%d,%.3f,%.3f\n",
       sim_data->random_seed,
-      PACKET_ARRIVAL_RATE,
+      packet_arrival_rate,
       backoff_mode,
       MEAN_BACKOFF_DURATION,
       NUMBER_OF_STATIONS,

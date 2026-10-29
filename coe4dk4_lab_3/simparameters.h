@@ -31,8 +31,8 @@
 #define BINARY_EXPONENTIAL_BACKOFF 1
 #define MEAN_PACKET_DURATION 1      /* normalized packet Tx time */
 #define SLOT_GUARD_TIME 0.001       /* epsilon, in packet-time units */
-#define PACKET_ARRIVAL_RATE 0.1     /* packets per Tx time */
-#define MEAN_BACKOFF_DURATION 10    /* in units of packet transmit time, Tx */
+#define PACKET_ARRIVAL_RATE_LIST 0.03,0.04,0.05,0.06,0.07,0.08,0.09
+#define MEAN_BACKOFF_DURATION 5     /* in units of packet transmit time, Tx */
 #define RUNLENGTH 70000000
 #define BLIPRATE 100000
 

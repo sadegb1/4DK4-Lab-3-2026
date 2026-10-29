@@ -27,6 +27,7 @@
 #include "packet_duration.h"
 #include "packet_transmission.h"
 #include "packet_arrival.h"
+#include "main.h"
 
 /*******************************************************************************/
 
@@ -86,7 +87,7 @@ packet_arrival_event(Simulation_Run_Ptr simulation_run, void* dummy_ptr)
 
   /* Schedule the next packet arrival. */
   schedule_packet_arrival_event(simulation_run, 
-		now + exponential_generator((double) 1/PACKET_ARRIVAL_RATE));
+		now + exponential_generator((double) 1/packet_arrival_rate));
 }
 
 

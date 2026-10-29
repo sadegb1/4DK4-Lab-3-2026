@@ -34,6 +34,8 @@
 #include "simparameters.h"
 #include "channel.h"
 
+extern double packet_arrival_rate;
+
 /**********************************************************************/
 
 typedef double Time;

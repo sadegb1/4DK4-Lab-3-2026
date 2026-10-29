@@ -38,9 +38,14 @@ schedule_transmission_start_event(Simulation_Run_Ptr simulation_run,
 {
   Event event;
   Time slot_duration = MEAN_PACKET_DURATION + 2.0 * SLOT_GUARD_TIME;
+  Time requested_time = event_time;
+  Time current_time = simulation_run_get_time(simulation_run);
 
   event_time = SLOT_GUARD_TIME +
     ceil((event_time - SLOT_GUARD_TIME) / slot_duration) * slot_duration;
+  while(event_time < requested_time || event_time < current_time) {
+    event_time += slot_duration;
+  }
 
   event.description = "Start Of Packet";
   event.function = transmission_start_event;
