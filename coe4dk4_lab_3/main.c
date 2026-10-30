@@ -83,6 +83,7 @@ main(void)
       data.number_of_collisions = 0;
       data.accumulated_delay = 0.0;
       data.random_seed = random_seed;
+      data.transmission_attempts = 0;
 
       /* Initialize the stations. */
       for(i=0; i<NUMBER_OF_STATIONS; i++) {

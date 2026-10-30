@@ -69,7 +69,9 @@ void output_results(Simulation_Run_Ptr this_simulation_run)
   sim_data = (Simulation_Run_Data_Ptr) simulation_run_data(this_simulation_run);
   
   double throughput = (double) sim_data->number_of_packets_processed / simulation_run_get_time(this_simulation_run);
-  double aggregate_traffic_load = sim_data->arrival_count / simulation_run_get_time(this_simulation_run);
+  double aggregate_traffic_load =
+    (double) sim_data->transmission_attempts * MEAN_PACKET_DURATION
+    / simulation_run_get_time(this_simulation_run);
 
   // printf("\n");
   // printf("Random Seed = %d \n", sim_data->random_seed);
