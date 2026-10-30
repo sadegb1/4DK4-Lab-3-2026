@@ -23,24 +23,20 @@
 /*******************************************************************************/
 
 #include <stdio.h>
-#include <math.h>
-#include "trace.h"
 #include "output.h"
-#include "channel.h"
 #include "packet_transmission.h"
 
 /*******************************************************************************/
 
 long int
-schedule_transmission_start_event(Simulation_Run_Ptr simulation_run,
-				  Time event_time,
-				  void * packet) 
+schedule_reservation_slot_event(Simulation_Run_Ptr simulation_run,
+				Time event_time)
 {
   Event event;
 
-  event.description = "Start Of Packet";
-  event.function = transmission_start_event;
-  event.attachment = packet;
+  event.description = "Reservation Mini-Slot";
+  event.function = reservation_slot_event;
+  event.attachment = NULL;
 
   return simulation_run_schedule_event(simulation_run, event, event_time);
 }
@@ -48,46 +44,69 @@ schedule_transmission_start_event(Simulation_Run_Ptr simulation_run,
 /*******************************************************************************/
 
 void
-transmission_start_event(Simulation_Run_Ptr simulation_run, void * ptr)
+reservation_slot_event(Simulation_Run_Ptr simulation_run, void * ptr)
 {
-  Packet_Ptr this_packet;
+  Packet_Ptr packet;
+  int i, attempts, selected_station, packets_waiting;
   Simulation_Run_Data_Ptr data;
-  Channel_Ptr channel;
+  Time now;
 
-  this_packet = (Packet_Ptr) ptr;
   data = (Simulation_Run_Data_Ptr) simulation_run_data(simulation_run);
-  channel = data->channel;
+  now = simulation_run_get_time(simulation_run);
+  attempts = 0;
+  selected_station = -1;
 
-  /* This packet is starting to transmit. */
-  increment_transmitting_stn_count(channel);
-  this_packet->status = TRANSMITTING;
-
-  if(get_channel_state(channel) != IDLE) {
-    /* The channel is now colliding. */
-    set_channel_state(channel, COLLISION);
-  } else {
-    /* The channel is successful, for now. */
-    set_channel_state(channel, SUCCESS);
+  for(i = 0; i < NUMBER_OF_STATIONS; i++) {
+    if(fifoqueue_size(data->stations[i].buffer) > 0 &&
+       uniform_generator() < RESERVATION_ATTEMPT_PROBABILITY) {
+      attempts++;
+      selected_station = i;
+    }
   }
 
-  /* Schedule the end of packet transmission event. */
-  schedule_transmission_end_event(simulation_run,
-				  simulation_run_get_time(simulation_run) + 
-				  this_packet->service_time,
-				  (void *) this_packet);
+  if(attempts == 1) {
+    packet = (Packet_Ptr) fifoqueue_get(data->stations[selected_station].buffer);
+    fifoqueue_put(data->data_buffer, packet);
+    data->reservation_successes++;
+
+    if(!data->data_channel_busy) {
+      data->data_channel_busy = 1;
+      schedule_data_transmission_end_event(simulation_run,
+        now + packet->service_time, packet);
+    }
+  } else if(attempts > 1) {
+    data->reservation_collisions++;
+  }
+
+  packets_waiting = 0;
+  for(i = 0; i < NUMBER_OF_STATIONS; i++) {
+    if(fifoqueue_size(data->stations[i].buffer) > 0) {
+      packets_waiting = 1;
+      break;
+    }
+  }
+  if(!data->arrivals_done || packets_waiting) {
+    schedule_reservation_slot_event(simulation_run,
+      now + data->reservation_slot_duration);
+  } else if(!data->data_channel_busy) {
+    data->simulation_done = 1;
+  } else {
+    schedule_reservation_slot_event(simulation_run,
+      now + data->reservation_slot_duration);
+  }
 }
 
 /*******************************************************************************/
 
 long int
-schedule_transmission_end_event(Simulation_Run_Ptr simulation_run,
-				Time event_time,
-				void * packet)
+schedule_data_transmission_end_event(Simulation_Run_Ptr simulation_run,
+             Time event_time,
+             void * packet)
 {
   Event event;
 
-  event.description = "End of Packet";
-  event.function = transmission_end_event;
+  event.description = "End Of Data Packet";
+  event.function = data_transmission_end_event;
   event.attachment = packet;
 
   return simulation_run_schedule_event(simulation_run, event, event_time);
@@ -96,79 +115,29 @@ schedule_transmission_end_event(Simulation_Run_Ptr simulation_run,
 /*******************************************************************************/
 
 void
-transmission_end_event(Simulation_Run_Ptr simulation_run, void * packet)
+data_transmission_end_event(Simulation_Run_Ptr simulation_run, void * packet)
 {
-  Packet_Ptr this_packet, next_packet;
-  Buffer_Ptr buffer;
-  Time backoff_duration, now;
+  Packet_Ptr completed_packet, next_packet;
   Simulation_Run_Data_Ptr data;
-  Channel_Ptr channel;
+  Time now;
 
   data = (Simulation_Run_Data_Ptr) simulation_run_data(simulation_run);
-  channel = data->channel;
-
   now = simulation_run_get_time(simulation_run);
+  completed_packet = (Packet_Ptr) fifoqueue_get(data->data_buffer);
+  data->number_of_packets_processed++;
+  if(now <= SIMULATION_DURATION) {
+    data->number_completed_in_window++;
+  }
+  data->accumulated_delay += now - completed_packet->arrive_time;
+  free(completed_packet);
+  output_blip_to_screen(simulation_run);
 
-  this_packet = (Packet_Ptr) packet;
-  buffer = (data->stations+this_packet->station_id)->buffer;
-
-  /* This station has stopped transmitting. */
-  decrement_transmitting_stn_count(channel);
-
-  /* Check if the packet was successful. */
-  if(get_channel_state(channel) == SUCCESS) {
-
-    /* Transmission was a success. The channel is now IDLE. */
-    set_channel_state(channel, IDLE);
-    
-    TRACE(printf("Success.\n"););
-
-    /* Collect statistics. */
-    data->number_of_packets_processed++;
-
-    (data->stations+this_packet->station_id)->packet_count++;
-    (data->stations+this_packet->station_id)->accumulated_delay +=
-      now - this_packet->arrive_time;
-
-    data->number_of_collisions += this_packet->collision_count;
-    data->accumulated_delay += now - this_packet->arrive_time;
-
-    output_blip_to_screen(simulation_run);
-
-    /* This packet is done. */
-    free((void*) fifoqueue_get(buffer));
-
-    /* See if there is another packet at this station. If so, enable
-       it for transmission. We will transmit immediately. */
-    if(fifoqueue_size(buffer) > 0) {
-      next_packet = fifoqueue_see_front(buffer);
-
-      schedule_transmission_start_event(simulation_run,
-					now,
-					(void*) next_packet);
-    }
-
+  if(fifoqueue_size(data->data_buffer) > 0) {
+    next_packet = (Packet_Ptr) fifoqueue_see_front(data->data_buffer);
+    schedule_data_transmission_end_event(simulation_run,
+      now + next_packet->service_time, next_packet);
   } else {
-
-    /* The transmission was unsuccessful. Clean up the channel state,
-       backoff, and try again. */
-
-    this_packet->collision_count++;
-    this_packet->status = WAITING;
-
-    TRACE(printf("Collision. Collision count = %i\n",
-		 this_packet->collision_count););
-
-    /* If the collision is over, free up the channel. */
-    if(get_transmitting_stn_count(channel) == 0) {
-      set_channel_state(channel, IDLE);
-    }
-
-    backoff_duration = 2.0*uniform_generator() * MEAN_BACKOFF_DURATION;
-
-    schedule_transmission_start_event(simulation_run,
-				      now + backoff_duration,
-				      (void *) this_packet);
+    data->data_channel_busy = 0;
   }
 
 }

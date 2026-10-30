@@ -35,73 +35,103 @@
 
 /*******************************************************************************/
 
+static void
+simulation_stop_event(Simulation_Run_Ptr simulation_run, void * ptr)
+{
+  Simulation_Run_Data_Ptr data;
+  int i;
+
+  data = (Simulation_Run_Data_Ptr) simulation_run_data(simulation_run);
+  data->arrivals_done = 1;
+  data->backlog_at_cutoff = fifoqueue_size(data->data_buffer);
+  for(i = 0; i < NUMBER_OF_STATIONS; i++) {
+    data->backlog_at_cutoff += fifoqueue_size(data->stations[i].buffer);
+  }
+  if(data->backlog_at_cutoff == 0 && !data->data_channel_busy) {
+    data->simulation_done = 1;
+  }
+}
+
 int
 main(void)
 {
-  /* Get the list of random number generator seeds defined in simparameters.h */
   unsigned random_seed;
   unsigned RANDOM_SEEDS[] = {RANDOM_SEED_LIST, 0};
+  double arrival_rates[] = {PACKET_ARRIVAL_RATE_LIST};
+  double reservation_ratios[] = {RESERVATION_RATIO_LIST};
 
   Simulation_Run_Ptr simulation_run;
   Simulation_Run_Data data;
-  int i, j=0;
+  int i, seed_index;
+  size_t rate_index, ratio_index;
 
-  /* Do a new simulation_run for each random number generator seed. */
-  while ((random_seed = RANDOM_SEEDS[j++]) != 0) {
+  printf("seed,arrival_rate,mean_packet_duration,reservation_slot_duration,X_over_Xr,attempt_probability,arrivals,completed_by_horizon,completed_after_drain,throughput,mean_delay,reservations,collision_slots,backlog_at_horizon\n");
 
-    /* Set the random generator seed. */
-    random_generator_initialize(random_seed);
+  for(rate_index = 0;
+      rate_index < sizeof(arrival_rates) / sizeof(arrival_rates[0]);
+      rate_index++) {
+    for(ratio_index = 0;
+        ratio_index < sizeof(reservation_ratios) / sizeof(reservation_ratios[0]);
+        ratio_index++) {
+      seed_index = 0;
+      while((random_seed = RANDOM_SEEDS[seed_index++]) != 0) {
+        random_generator_initialize(random_seed);
 
-    /* Create a new simulation_run. This gives a clock and
-       eventlist. Clock time is set to zero. */
-    simulation_run = (Simulation_Run_Ptr) simulation_run_new();
+        simulation_run = (Simulation_Run_Ptr) simulation_run_new();
+        simulation_run_set_data(simulation_run, (void *) &data);
 
-    /* Add our data definitions to the simulation_run. */
-    simulation_run_set_data(simulation_run, (void *) & data);
+        data.stations = (Station_Ptr) xcalloc(NUMBER_OF_STATIONS,
+                                              sizeof(Station));
+        data.data_buffer = fifoqueue_new();
+        data.blip_counter = 0;
+        data.arrival_count = 0;
+        data.number_of_packets_processed = 0;
+        data.number_completed_in_window = 0;
+        data.reservation_successes = 0;
+        data.reservation_collisions = 0;
+        data.backlog_at_cutoff = 0;
+        data.accumulated_delay = 0.0;
+        data.packet_arrival_rate = arrival_rates[rate_index];
+        data.reservation_slot_duration = MEAN_PACKET_DURATION /
+          reservation_ratios[ratio_index];
+        data.data_channel_busy = 0;
+        data.arrivals_done = 0;
+        data.simulation_done = 0;
+        data.random_seed = random_seed;
 
-    /* Create and initalize the stations. */
-    data.stations = (Station_Ptr) xcalloc((unsigned int) NUMBER_OF_STATIONS,
-					  sizeof(Station));
+        for(i = 0; i < NUMBER_OF_STATIONS; i++) {
+          data.stations[i].id = i;
+          data.stations[i].buffer = fifoqueue_new();
+        }
 
-    /* Initialize various simulation_run variables. */
-    data.blip_counter = 0;
-    data.arrival_count = 0;
-    data.number_of_packets_processed = 0;
-    data.number_of_collisions = 0;
-    data.accumulated_delay = 0.0;
-    data.random_seed = random_seed;
-    
-    /* Initialize the stations. */
-    for(i=0; i<NUMBER_OF_STATIONS; i++) {
-      (data.stations+i)->id = i;
-      (data.stations+i)->buffer = fifoqueue_new();
-      (data.stations+i)->packet_count = 0;
-      (data.stations+i)->accumulated_delay = 0.0;
-      (data.stations+i)->mean_delay = 0;
+        {
+          double first_arrival = exponential_generator(
+            1.0 / data.packet_arrival_rate);
+          if(first_arrival < SIMULATION_DURATION) {
+            schedule_packet_arrival_event(simulation_run, first_arrival);
+          }
+        }
+        schedule_reservation_slot_event(simulation_run,
+          data.reservation_slot_duration);
+
+        {
+          Event stop_event;
+          stop_event.description = "Simulation Stop";
+          stop_event.function = simulation_stop_event;
+          stop_event.attachment = NULL;
+          simulation_run_schedule_event(simulation_run, stop_event,
+                                        SIMULATION_DURATION);
+        }
+
+        while(!data.simulation_done) {
+          simulation_run_execute_event(simulation_run);
+        }
+
+        output_results(simulation_run);
+        cleanup(simulation_run);
+      }
     }
-
-    /* Create and initialize the channel. */
-    data.channel = channel_new();
-
-    /* Schedule initial packet arrival. */
-    schedule_packet_arrival_event(simulation_run, 
-		    simulation_run_get_time(simulation_run) +
-		    exponential_generator((double) 1/PACKET_ARRIVAL_RATE));
-
-    /* Execute events until we are finished. */
-    while(data.number_of_packets_processed < RUNLENGTH) {
-      simulation_run_execute_event(simulation_run);
-    }
-
-    /* Print out some results. */
-    output_results(simulation_run);
-
-    /* Clean up memory. */
-    cleanup(simulation_run);
   }
-
-  /* Pause before finishing. */
-  getchar();
 
   return 0;
 }

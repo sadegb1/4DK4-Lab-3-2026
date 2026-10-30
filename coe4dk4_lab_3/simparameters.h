@@ -29,9 +29,12 @@
 
 #define NUMBER_OF_STATIONS 10
 #define MEAN_PACKET_DURATION 1      /* normalized packet Tx time */
-#define PACKET_ARRIVAL_RATE 0.1     /* packets per Tx time */
-#define MEAN_BACKOFF_DURATION 10    /* in units of packet transmit time, Tx */
-#define RUNLENGTH 70000000
+#define PACKET_ARRIVAL_RATE_LIST 0.2,0.4,0.6,0.8,1.0,1.2,1.5,2.0,3.0,4.0
+#define RESERVATION_RATIO_LIST 1.0,2.0,5.0,10.0
+#define RESERVATION_ATTEMPT_PROBABILITY (1.0 / NUMBER_OF_STATIONS)
+#ifndef SIMULATION_DURATION
+#define SIMULATION_DURATION 100000.0
+#endif
 #define BLIPRATE 100000
 
 /* Comma separated list of random seeds to run. */

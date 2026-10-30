@@ -23,13 +23,14 @@
 /*******************************************************************************/
 
 #include "packet_duration.h"
+#include "simlib.h"
 
 /*******************************************************************************/
 
 double
 get_packet_duration(void)
 {
-  return ((double) MEAN_PACKET_DURATION);
+  return exponential_generator((double) MEAN_PACKET_DURATION);
 }
 
 

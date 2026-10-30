@@ -42,11 +42,14 @@ cleanup (Simulation_Run_Ptr simulation_run)
     while (fifoqueue_size((data->stations+i)->buffer) > 0) {
       xfree(fifoqueue_get((data->stations+i)->buffer));
     }
+    xfree((data->stations+i)->buffer);
   }
   xfree(data->stations);
 
-  /* Clean out the channel. */
-  xfree(data->channel);
+  while(fifoqueue_size(data->data_buffer) > 0) {
+    xfree(fifoqueue_get(data->data_buffer));
+  }
+  xfree(data->data_buffer);
 
   /* Clean up the simulation_run. */
   simulation_run_free_memory(simulation_run);

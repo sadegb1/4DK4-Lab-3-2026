@@ -23,6 +23,7 @@
 /*******************************************************************************/
 
 #include <stdio.h>
+#include "simlib.h"
 #include "simparameters.h"
 #include "main.h"
 #include "output.h"
@@ -32,29 +33,18 @@
 void
 output_blip_to_screen(Simulation_Run_Ptr simulation_run)
 {
-  double percentagedone;
   Simulation_Run_Data_Ptr data;
 
   data = (Simulation_Run_Data_Ptr) simulation_run_data(simulation_run);
 
   data->blip_counter++;
 
-  if((data->blip_counter >= BLIPRATE)
-     ||
-     (data->number_of_packets_processed >= RUNLENGTH)) {
-
+  if(data->blip_counter >= BLIPRATE) {
     data->blip_counter = 0;
-
-    percentagedone =
-      100 * (double) data->number_of_packets_processed/RUNLENGTH;
-
-    printf("%3.0f%% ", percentagedone);
-
-    printf("Successfully Xmtted Pkts  = %ld (Arrived Pkts = %ld) \r", 
-	   data->number_of_packets_processed, 
-	   data->arrival_count);
-
-    fflush(stdout);
+    fprintf(stderr, "Completed %ld packets at time %.0f\r",
+      data->number_of_packets_processed,
+      simulation_run_get_time(simulation_run));
+    fflush(stderr);
   }
 }
 
@@ -62,36 +52,31 @@ output_blip_to_screen(Simulation_Run_Ptr simulation_run)
 
 void output_results(Simulation_Run_Ptr this_simulation_run)
 {
-  int i;
-  double xmtted_fraction;
+  double mean_delay;
   Simulation_Run_Data_Ptr sim_data;
 
   sim_data = (Simulation_Run_Data_Ptr) simulation_run_data(this_simulation_run);
-
-  printf("\n");
-  printf("Random Seed = %d \n", sim_data->random_seed);
-  printf("Pkt Arrivals = %ld \n", sim_data->arrival_count);
-
-  xmtted_fraction = (double) sim_data->number_of_packets_processed /
-    sim_data->arrival_count;
-
-  printf("Xmtted Pkts  = %ld (Service Fraction = %.5f)\n",
-	 sim_data->number_of_packets_processed, xmtted_fraction);
-
-  printf("Mean Delay   = %.1f \n",
-	 sim_data->accumulated_delay/sim_data->number_of_packets_processed);
-
-  printf("Mean collisions per packet = %.3f\n",
-	 (double) sim_data->number_of_collisions / 
-	 sim_data->number_of_packets_processed);
-
-  for(i=0; i<NUMBER_OF_STATIONS; i++) {
-
-    printf("Station %2i Mean Delay = %8.1f \n", i,
-	   (sim_data->stations+i)->accumulated_delay / 
-	   (sim_data->stations+i)->packet_count);
+  mean_delay = 0.0;
+  if(sim_data->arrival_count > 0) {
+    mean_delay = sim_data->accumulated_delay /
+      sim_data->arrival_count;
   }
-  printf("\n\n");
+
+  printf("%u,%.3f,%.3f,%.3f,%.1f,%.3f,%ld,%ld,%ld,%.6f,%.3f,%ld,%ld,%ld\n",
+    sim_data->random_seed,
+    sim_data->packet_arrival_rate,
+    (double) MEAN_PACKET_DURATION,
+    sim_data->reservation_slot_duration,
+    MEAN_PACKET_DURATION / sim_data->reservation_slot_duration,
+    (double) RESERVATION_ATTEMPT_PROBABILITY,
+    sim_data->arrival_count,
+    sim_data->number_completed_in_window,
+    sim_data->number_of_packets_processed,
+    (double) sim_data->number_completed_in_window / SIMULATION_DURATION,
+    mean_delay,
+    sim_data->reservation_successes,
+    sim_data->reservation_collisions,
+    sim_data->backlog_at_cutoff);
 }
 
 

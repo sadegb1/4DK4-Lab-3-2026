@@ -25,7 +25,6 @@
 #include <math.h>
 #include <stdio.h>
 #include "packet_duration.h"
-#include "packet_transmission.h"
 #include "packet_arrival.h"
 
 /*******************************************************************************/
@@ -52,7 +51,7 @@ packet_arrival_event(Simulation_Run_Ptr simulation_run, void* dummy_ptr)
   Station_Ptr station;
   Packet_Ptr new_packet;
   Buffer_Ptr stn_buffer;
-  Time now;
+  Time now, next_arrival;
   Simulation_Run_Data_Ptr data;
 
   now = simulation_run_get_time(simulation_run);
@@ -69,24 +68,17 @@ packet_arrival_event(Simulation_Run_Ptr simulation_run, void* dummy_ptr)
   new_packet = (Packet_Ptr) xmalloc(sizeof(Packet));
   new_packet->arrive_time = now;
   new_packet->service_time = get_packet_duration();
-  new_packet->status = WAITING;
-  new_packet->collision_count = 0;
   new_packet->station_id = random_station_id;
 
   /* Put the packet in the buffer at that station. */
   stn_buffer = station->buffer;
   fifoqueue_put(stn_buffer, (void *) new_packet);
 
-  /* If this is the only packet at the station, transmit it (i.e., the
-     ALOHA protocol). It stays in the queue either way. */
-  if(fifoqueue_size(stn_buffer) == 1) {
-    /* Transmit the packet. */
-    schedule_transmission_start_event(simulation_run, now, (void *) new_packet);
-  }
-
   /* Schedule the next packet arrival. */
-  schedule_packet_arrival_event(simulation_run, 
-		now + exponential_generator((double) 1/PACKET_ARRIVAL_RATE));
+  next_arrival = now + exponential_generator(1.0 / data->packet_arrival_rate);
+  if(next_arrival < SIMULATION_DURATION) {
+    schedule_packet_arrival_event(simulation_run, next_arrival);
+  }
 }
 
 

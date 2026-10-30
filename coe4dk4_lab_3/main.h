@@ -32,7 +32,6 @@
 
 #include "simlib.h"
 #include "simparameters.h"
-#include "channel.h"
 
 /**********************************************************************/
 
@@ -45,34 +44,34 @@ typedef struct _station_
 {
   int id;
   Buffer_Ptr buffer;
-  long int packet_count;
-  double accumulated_delay;
-  double mean_delay;
 } Station, * Station_Ptr;
 
 /**********************************************************************/
-
-typedef enum {WAITING, TRANSMITTING} Packet_Status;
 
 typedef struct _packet_ 
 {
   double arrive_time;
   double service_time;
   int station_id;
-  Packet_Status status;
-  int collision_count;
 } Packet, * Packet_Ptr;
 
 typedef struct _simulation_run_data_
 {
   Station_Ptr stations;
-  Channel_Ptr channel;
+  Buffer_Ptr data_buffer;
   long int blip_counter;
   long int arrival_count;
-  long int packets_processed;
   long int number_of_packets_processed;
-  long int number_of_collisions;
+  long int number_completed_in_window;
+  long int reservation_successes;
+  long int reservation_collisions;
+  long int backlog_at_cutoff;
   double accumulated_delay;
+  double packet_arrival_rate;
+  double reservation_slot_duration;
+  int data_channel_busy;
+  int arrivals_done;
+  int simulation_done;
   unsigned random_seed;
 } Simulation_Run_Data, * Simulation_Run_Data_Ptr;
 
